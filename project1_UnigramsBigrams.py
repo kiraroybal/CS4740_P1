@@ -1,6 +1,7 @@
 from collections import defaultdict
 from pprint import pprint
 import pandas as pd
+from random import randint, randrange
 
 
 # create bigram table
@@ -27,14 +28,17 @@ def store_counts(filename):
     table = pd.DataFrame(types).T.fillna(0).applymap(lambda x: int(x))
     # add totals
     table['SUM'] = table.sum(axis=1)
+    table.loc['</s>', 'SUM'] = int(table.loc['<s>', 'SUM'])
     return table
 
-# return the unigram for a given word, with a given table of counts
+
+# return the unigram P(word) for a given word, with a given table of counts
 def unigram(word, table):
     try:
-        return table.loc[word, 'SUM']
+        return float(table.loc[word, 'SUM'])/float(table['SUM'].sum())
     except KeyError:
         print "This word doesn't exist in the corpus."
+
 
 # return the bigram P(word2|word1) for the given table of counts
 def bigram(word1, word2, table):
@@ -43,35 +47,37 @@ def bigram(word1, word2, table):
     except KeyError:
         print "Either word1 or word2 doesn't exist in the corpus"
 
-#create sum list
+
+# create sum list
 def sumList(table):
     sums = table["SUM"]
-    characters = sums.index.tolist()
+    tokens = sums.index.tolist()
 
     wordprob = []
 
-    for i in range(0, sums.count-1):
+    for i in range(0, len(sums)):
         currentcount = sums[i]
-        currentword = characters[i]
-        for i in range(1, currentcount):
+        currentword = tokens[i]
+        for i in range(0, int(currentcount)):
             wordprob.append(currentword)
 
-    return wordprop
+    return wordprob
 
-#create random unigram sentence
+# create random unigram sentence
 def rsgUnigram(table):
     endgram = False
     wordlist = sumList(table)
+    # return wordlist
     sentence = wordlist[randrange(0, len(wordlist)-1)]
-    while(!endgram):
+    while(not endgram):
         currentindex = randrange(0, len(wordlist)-1)
         currentword = wordlist[currentindex]
         sentence = sentence + " " + currentword
-
-        if("currentword is an endgram"):
+        if currentword == '</s>':
             endgram = True
 
-    return sentence
+    return sentence.split('</s>')[0].strip()
+
 
 def bigram_sentence_generator(counts):
     counts = counts.drop('SUM', axis=1)
@@ -86,6 +92,7 @@ def bigram_sentence_generator(counts):
         token = token_list[rd_idx]  # get corresponding token
         sentence += ' ' + token
     return sentence.split('</s>')[0].strip()
+
 
 
 
