@@ -1,6 +1,7 @@
 from collections import defaultdict
 from pprint import pprint
 import pandas as pd
+from random import randint
 
 
 # create bigram table
@@ -24,12 +25,14 @@ def store_counts(filename):
     table['SUM'] = table.sum(axis=1)
     return table
 
-# return the unigram for a given word, with a given table of counts
+
+# return the unigram P(word) for a given word, with a given table of counts
 def unigram(word, table):
     try:
-        return table.loc[word, 'SUM']
+        return float(table.loc[word, 'SUM'])/float(table['SUM'].sum())
     except KeyError:
         print "This word doesn't exist in the corpus."
+
 
 # return the bigram P(word2|word1) for the given table of counts
 def bigram(word1, word2, table):
@@ -37,6 +40,22 @@ def bigram(word1, word2, table):
         return float(table.loc[word1, word2])/float(unigram(word1, table))
     except KeyError:
         print "Either word1 or word2 doesn't exist in the corpus"
+
+
+def bigram_sentence_generator(counts):
+    counts = counts.drop('SUM', axis=1)
+    sentence = ''
+    token = '<s>'
+    while (token != '</s>'):
+        row = counts.loc[token]  # get counts based on previous token
+        token_list = []  # create a list of tokens based on counts
+        for label, value in row.iteritems():
+            token_list.extend([label] * value)
+        rd_idx = randint(0, len(token_list) - 1)  # pick random index
+        token = token_list[rd_idx]  # get corresponding token
+        sentence += ' ' + token
+    return sentence.split('</s>')[0].strip()
+
 
 
 
